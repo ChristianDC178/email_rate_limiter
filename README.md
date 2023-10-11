@@ -107,4 +107,6 @@ etc..
     }
 ```
 
-- 
+- Class Diagram 
+
+![Class Diagram](https://github.com/ChristianDC178/email_rate_limiter/blob/main/class_diagram.jpg "Class Diagram")
