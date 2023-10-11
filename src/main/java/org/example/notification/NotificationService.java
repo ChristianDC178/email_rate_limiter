@@ -6,17 +6,21 @@ import org.example.ratelimit.*;
 public class NotificationService implements INotificationService {
 
     private Gateway gateway;
+    private HashMap<String, IEmailRateLimitRule> emailRateLimitRules;
 
-    private HashMap<String, IEmailRateLimitRule> ruleCheckers;
+    public NotificationService(Gateway gateway, HashMap<String, IEmailRateLimitRule> rules ) throws Exception {
 
-    public NotificationService(Gateway gateway, HashMap<String, IEmailRateLimitRule> ruleCheckers ) throws Exception {
         this.gateway = gateway;
 
-        if(ruleCheckers.isEmpty())
+        if(rules.isEmpty())
             throw new Exception("Rules cannot be empty");
 
-        this.ruleCheckers = ruleCheckers;
+        this.emailRateLimitRules = rules;
 
+        System.out.println("Notification Service - Starting cleaning schedulers");
+        this.emailRateLimitRules.values().stream().forEach((r) -> {
+            r.StartCleanScheduler();
+        });
     }
 
     @Override
@@ -24,13 +28,13 @@ public class NotificationService implements INotificationService {
 
         synchronized (this) {
 
-            IEmailRateLimitRule ruleChecker = ruleCheckers.get(emailType);
+            IEmailRateLimitRule ruleChecker = emailRateLimitRules.get(emailType);
 
             if (ruleChecker.CanSendEmail(userId)) {
                 gateway.send(userId, message);
                 ruleChecker.RegisterEmailSent(userId);
             } else {
-                System.out.println("The email has not been sent " + userId);
+                System.out.println("**** The email cannot be sent. Rate Limit at maximum capacity for: User " + userId + " - Email Type: " + emailType);
             }
         }
     }

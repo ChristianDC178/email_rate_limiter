@@ -13,8 +13,9 @@ public class EmailRuleRateLimit extends EmailRuleRateLimitBase {
 
     RuleType ruleType;
 
-    public EmailRuleRateLimit(Integer emailThreshold) {
+    public EmailRuleRateLimit(Integer emailThreshold, RuleType ruleType) {
         super(emailThreshold);
+        this.ruleType = ruleType;
     }
 
     private TimeUnit translateToTimeUnit(RuleType ruleType) {
@@ -41,7 +42,7 @@ public class EmailRuleRateLimit extends EmailRuleRateLimitBase {
 
                 Iterator<Map.Entry<String, UserEmailLog>> iterator = this.emailLogs.entrySet().iterator();
 
-                System.out.println("deleting email log. Email Logs count " + this.emailLogs.size());
+                System.out.println("@@@ Running Clean Scheduler " + this.emailLogs.size());
 
                 // Iterate through the HashMap and remove entries containing "Remove"
                 while (iterator.hasNext()) {
@@ -50,11 +51,13 @@ public class EmailRuleRateLimit extends EmailRuleRateLimitBase {
                     long result = System.currentTimeMillis() - eLog.getEmailSentDateTime();
 
                     if (ruleType == RuleType.ByMinute && (result > Constants.MINUTE_IN_MILLISECONDS)) {
+                        System.out.println("### ByMinute - Message Cleaned");
                         iterator.remove();
-                        System.out.println("log deleted ");
                     } else if (ruleType == RuleType.ByHour && (result > Constants.HOUR_IN_MILLISECONDS)) {
+                        System.out.println("### ByHour - Message Cleaned");
                         iterator.remove();
                     } else if (ruleType == RuleType.ByDay && (LocalDate.now().toEpochDay() > eLog.getEmailSentDateTime())) {
+                        System.out.println("### ByDay - Message Cleaned");
                         iterator.remove();
                     }
 

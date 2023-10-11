@@ -3,8 +3,6 @@ package org.example;
 import org.example.notification.Gateway;
 import org.example.notification.NotificationService;
 import org.example.ratelimit.*;
-
-import java.time.LocalDate;
 import java.util.HashMap;
 
 public class Main {
@@ -13,32 +11,34 @@ public class Main {
 
         try {
 
-            long epochDate = LocalDate.now().toEpochDay();
-
-
-
-
-
-            IEmailRateLimitRule minuteChecker = new EmailRuleRateLimit(2);
+            IEmailRateLimitRule newsRule = new EmailRuleRateLimit(3, RuleType.ByMinute);
+            IEmailRateLimitRule statusRule = new EmailRuleRateLimit(2, RuleType.ByMinute);
+            IEmailRateLimitRule updateRule = new EmailRuleRateLimit(1, RuleType.ByHour);
 
             HashMap<String, IEmailRateLimitRule> rules = new HashMap<>();
-            rules.put("news", minuteChecker);
-
-            minuteChecker.StartCleanScheduler();
+            rules.put("news", newsRule);
+            rules.put("status", statusRule);
+            rules.put("update", updateRule);
 
             NotificationService service = new NotificationService(new Gateway(), rules);
-            service.send("news", "user-1", "news A");
-            service.send("news", "user-1", "news B");
-            service.send("news", "user-1", "news C");
-            service.send("news", "user-1", "news D");
-            service.send("news", "user-1", "news E");
-            service.send("news", "user-1", "news F");
-            service.send("news", "user-1", "news G");
 
-            Thread.sleep(120000);
+            Integer emailsCount = 50000;
+            Integer threadSleep = 10000;
 
-            service.send("news", "user-1", "news 2");
-            service.send("news", "user-1", "news 2");
+            for (Integer i = 0; i < emailsCount; i++ ) {
+
+                service.send("news", "user-1", "news A");
+                service.send("status", "user-2", "news A");
+
+                Thread.sleep(10000);
+
+                service.send("update", "user-3", "news X - Update");
+                service.send("update", "user-4", "news Y - Update");
+                service.send("update", "user-3", "news X - Update");
+                service.send("update", "user-4", "news Y - Update");
+
+                Thread.sleep(threadSleep);
+            }
 
         } catch (Exception ex) {
             System.out.print(ex.getMessage());
